@@ -1,0 +1,1 @@
+# osCommerce-ginger-plugin
