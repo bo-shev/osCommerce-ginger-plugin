@@ -5,7 +5,21 @@ $prefixLarge = "EMS";
 
 $pluginPrefixLarge = "EMSPAY";
 
-constant('MODULE_PAYMENT_EMSPAY_'..'_TEXT_TITLE');
+//constant('MODULE_PAYMENT_'.$pluginPrefixLarge.'_'.$pluginPrefixLarge.'_TEXT_TITLE');
+
+function getConstant($paymentId, $constantType)
+{
+    //$constantType = TEXT_TITLE
+
+    global $paymentNameLarge, $pluginPrefixLarge;
+
+    return constant('MODULE_PAYMENT_'.$pluginPrefixLarge.'_'.$paymentNameLarge['$paymentId'].'_'.$constantType);
+}
+
+$paymentNameLarge = array(
+    "ideal" => 'IDEAL',
+    "afterpay" => 'AFTERPAY',
+);
 
 $paymentId = array(
     "ideal" => 'ideal',

@@ -2,6 +2,10 @@
 class emspay_ideal {
   var $code, $title, $description, $sort_order, $enabled, $debug_mode, $log_to, $emspay, $id;
 
+
+  private $endpoint = 'https://api.online.emspay.eu';
+  private $apiKey;
+  private $client;
   // Class Constructor
   function emspay_ideal() {
     global $order;
@@ -15,6 +19,7 @@ class emspay_ideal {
     $this->enabled = ( ( MODULE_PAYMENT_EMSPAY_IDEAL_STATUS == 'True' ) ? true : false );
     $this->debug_mode = ( ( MODULE_PAYMENT_EMSPAY_DEBUG_MODE == 'True' ) ? true : false );
     $this->log_to = MODULE_PAYMENT_EMSPAY_LOG_TO;
+    $this->apiKey = MODULE_PAYMENT_EMSPAY_APIKEY;
 
     if ( (int)MODULE_PAYMENT_EMSPAY_ORDER_STATUS_ID > 0 ) {
       $this->order_status = MODULE_PAYMENT_EMSPAY_ORDER_STATUS_ID;
@@ -28,9 +33,9 @@ class emspay_ideal {
 
     $this->emspay = null;
     if ($this->enabled) {
-      if ( file_exists( 'emspay/ems_lib.php' ) ) {
-        require_once 'emspay/ems_lib.php';
-        $this->emspay = new Ems_Services_Lib( MODULE_PAYMENT_EMSPAY_APIKEY, $this->log_to, $this->debug_mode );
+      if ( file_exists( 'gpe_payment/ems_lib.php' ) ) {
+        require_once 'gpe_payment/ems_lib.php';
+        $this->emspay = new services_Lib( MODULE_PAYMENT_EMSPAY_APIKEY, $this->log_to, $this->debug_mode );
       } else {
         // TODO: SHOULD GIVE WARNING
       }
@@ -60,9 +65,9 @@ class emspay_ideal {
       }
     }
 
-    if ( $order->info['currency'] != "EUR" ) {
-      $this->enabled = false;
-    }
+//    if ( $order->info['currency'] != "EUR" ) {
+//      $this->enabled = false;
+//    }
 
     // check that api key is not blank
     if ( !MODULE_PAYMENT_EMSPAY_APIKEY or !strlen( MODULE_PAYMENT_EMSPAY_APIKEY ) ) {
@@ -141,6 +146,16 @@ class emspay_ideal {
   function after_process() {
     global $insert_id, $order;
 
+      $webhook_url =  tep_href_link( "ext/modules/payment/emspay/notify.php", '', 'SSL' );
+
+    $this->client = $this->emspay->createClient($this->endpoint, $this->apiKey);
+      $dataForRequest = $this->emspay->collectDataForRequest($order->info["currency"], $this->emspay->priceInCoince($order->info["total"]), $order->info["payment_method"], (string)$insert_id, $webhook_url, "ideal", $_SESSION['emspay_issuer_id']);
+
+    $gingerOrder = $this->emspay->createGingerOrder($this->client, $dataForRequest);
+
+    var_dump($gingerOrder);
+
+    //echo 'after_process';
     $webhook_url =  tep_href_link( "ext/modules/payment/emspay/notify.php", '', 'SSL' );
 
     $customer = $this->emspay->getCustomerInfo();
